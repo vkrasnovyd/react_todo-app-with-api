@@ -20,7 +20,7 @@ Add the ability to toggle the completed status of all the todos with the `toggle
 - `toggleAll` button should have `active` class only if all the todos are completed;
 - `toggleAll` click changes its status to the opposite one, and sets this new status to all the todos;
 - it should work the same as several individual updates of the todos which statuses were actually changed;
-- do send requests for the todos that were not changed;
+- don't send requests for the todos that were not changed;
 
 ## Renaming a todo
 
@@ -41,7 +41,7 @@ Implement the ability to edit a todo title on double click:
 - open `cypress/integration/page.spec.js`
 - replace `describe.skip` with `describe` for the root `describe`
 
-> ❗❗All tests should pass, even if some behaviour in not well explained in the task❗❗
+> ❗❗All tests should pass, even if some behaviour is not well explained in the task❗❗
 
 ## Instructions
 
