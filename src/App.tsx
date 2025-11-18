@@ -18,6 +18,11 @@ export const App: React.FC = () => {
   const [error, setError] = useState('');
   const newTodoField = useRef<HTMLInputElement>(null);
 
+  const setDisappearingError = (msg: string, timeout: number = 3000) => {
+    setError(msg);
+    setTimeout(() => setError(''), timeout);
+  };
+
   const getWindowHash = (): TodoStatusOption => {
     const hash = window.location.hash.slice(2);
 
@@ -45,8 +50,7 @@ export const App: React.FC = () => {
     getTodos()
       .then((fetchedTodos: Todo[]) => setTodos(fetchedTodos))
       .catch(() => {
-        setError('Unable to load todos');
-        setTimeout(() => setError(''), 3000);
+        setDisappearingError('Unable to load todos');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -95,9 +99,15 @@ export const App: React.FC = () => {
           </form>
         </header>
 
-        <TodoList visibleTodos={visibleTodos} />
+        <TodoList
+          visibleTodos={visibleTodos}
+          setTodos={setTodos}
+          setError={setDisappearingError}
+        />
 
-        {!!todos.length && <Footer allTodos={todos} currentFilter={filter} />}
+        {!!todos.length && (
+          <Footer allTodos={todos} setTodos={setTodos} currentFilter={filter} />
+        )}
       </div>
 
       {/* DON'T use conditional rendering to hide the notification */}

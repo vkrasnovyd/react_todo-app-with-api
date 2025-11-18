@@ -5,13 +5,20 @@ import {
   todoStatusOptions,
 } from '../../types/TodoStatusOption';
 import { Todo } from '../../types/Todo';
+import { deleteTodo } from '../../api/todos';
+import { StateSetter } from '../../types/StateSetter';
 
 interface Props {
   allTodos: Todo[];
+  setTodos: StateSetter<Todo[]>;
   currentFilter: TodoStatusOption;
 }
 
-export const Footer: React.FC<Props> = ({ allTodos, currentFilter }) => {
+export const Footer: React.FC<Props> = ({
+  allTodos,
+  setTodos,
+  currentFilter,
+}) => {
   const activeTodos: Todo[] = [];
   const completedTodos: Todo[] = [];
 
@@ -22,6 +29,11 @@ export const Footer: React.FC<Props> = ({ allTodos, currentFilter }) => {
       activeTodos.push(todo);
     }
   });
+
+  const handleCleanup = () => {
+    completedTodos.forEach(todo => deleteTodo(todo.id));
+    setTodos(activeTodos);
+  };
 
   return (
     <footer
@@ -58,6 +70,7 @@ export const Footer: React.FC<Props> = ({ allTodos, currentFilter }) => {
         className="todoapp__clear-completed"
         data-cy="ClearCompletedButton"
         disabled={!completedTodos.length}
+        onClick={handleCleanup}
       >
         Clear completed
       </button>

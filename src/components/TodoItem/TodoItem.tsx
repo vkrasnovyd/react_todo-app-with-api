@@ -1,17 +1,37 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import classNames from 'classnames';
 import { TodoLoader } from '../TodoLoader';
-import { RefObject } from 'react';
+import { RefObject, useRef } from 'react';
 import { Todo } from '../../types/Todo';
+import { deleteTodo } from '../../api/todos';
+import { StateSetter } from '../../types/StateSetter';
 
 interface Props {
   todo: Todo;
   nodeRef: RefObject<HTMLDivElement>;
+  setTodos: StateSetter<Todo[]>;
+  setError: (msg: string, timeout?: number) => void;
 }
 
-export const TodoItem: React.FC<Props> = ({ todo, nodeRef }) => {
-  const loading = false;
+export const TodoItem: React.FC<Props> = ({
+  todo,
+  nodeRef,
+  setTodos,
+  setError,
+}) => {
+  const loading = useRef(false);
   const editing = false;
+
+  const handleDelete = (todoId: number): void => {
+    loading.current = true;
+    deleteTodo(todoId)
+      .catch(() => setError('Unable to delete a todo'))
+      .finally(() => {
+        setTodos((currentTodos: Todo[]) => {
+          return currentTodos.filter(t => t.id !== todoId);
+        });
+      });
+  };
 
   return (
     <div
@@ -44,13 +64,18 @@ export const TodoItem: React.FC<Props> = ({ todo, nodeRef }) => {
           <span data-cy="TodoTitle" className="todo__title">
             {todo.title}
           </span>
-          <button type="button" className="todo__remove" data-cy="TodoDelete">
+          <button
+            type="button"
+            className="todo__remove"
+            data-cy="TodoDelete"
+            onClick={() => handleDelete(todo.id)}
+          >
             ×
           </button>
         </>
       )}
 
-      <TodoLoader isActive={loading} />
+      <TodoLoader isActive={loading.current} />
     </div>
   );
 };
