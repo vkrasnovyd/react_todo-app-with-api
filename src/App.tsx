@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getTodos } from './api/todos';
 import { Footer } from './components/Footer';
 import {
@@ -10,13 +9,27 @@ import {
 import classNames from 'classnames';
 import { TodoList } from './components/TodoList';
 import { Todo } from './types/Todo';
+import { NewTodoForm } from './components/NewTodoForm';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState<TodoStatusOption>(TodoStatusOptions.ALL);
-  const [loading, setLoading] = useState(false);
+  const [loadingIds, setLoadingIds] = useState<number[]>([]);
   const [error, setError] = useState('');
-  const newTodoField = useRef<HTMLInputElement>(null);
+  const [tempTodo, setTempTodo] = useState<Todo | null>(null);
+
+  const addLoadingId = (postId: number) => {
+    setLoadingIds(prev => (prev.includes(postId) ? prev : [...prev, postId]));
+  };
+
+  const removeLoadingId = (postId: number) => {
+    setLoadingIds(prev => prev.filter(lid => lid !== postId));
+  };
+
+  const setDisappearingError = (msg: string, timeout: number = 3000) => {
+    setError(msg);
+    setTimeout(() => setError(''), timeout);
+  };
 
   const getWindowHash = (): TodoStatusOption => {
     const hash = window.location.hash.slice(2);
@@ -36,19 +49,12 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    newTodoField.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
     setError('');
     getTodos()
       .then((fetchedTodos: Todo[]) => setTodos(fetchedTodos))
       .catch(() => {
-        setError('Unable to load todos');
-        setTimeout(() => setError(''), 3000);
-      })
-      .finally(() => setLoading(false));
+        setDisappearingError('Unable to load todos');
+      });
   }, []);
 
   const visibleTodos = useMemo(() => {
@@ -83,25 +89,35 @@ export const App: React.FC = () => {
             />
           )}
 
-          {/* Add a todo on form submit */}
-          <form>
-            <input
-              data-cy="NewTodoField"
-              type="text"
-              className="todoapp__new-todo"
-              placeholder="What needs to be done?"
-              ref={newTodoField}
-            />
-          </form>
+          <NewTodoForm
+            setTodos={setTodos}
+            setError={setError}
+            setDisappearingError={setDisappearingError}
+            setTempTodo={setTempTodo}
+            todos={todos}
+          />
         </header>
 
-        <TodoList visibleTodos={visibleTodos} />
+        <TodoList
+          visibleTodos={visibleTodos}
+          setTodos={setTodos}
+          setError={setError}
+          tempTodo={tempTodo}
+          loadingIds={loadingIds}
+          addLoadingId={addLoadingId}
+          removeLoadingId={removeLoadingId}
+        />
 
-        {!!todos.length && <Footer allTodos={todos} currentFilter={filter} />}
+        {!!todos.length && (
+          <Footer
+            allTodos={todos}
+            setTodos={setTodos}
+            currentFilter={filter}
+            setError={setError}
+          />
+        )}
       </div>
 
-      {/* DON'T use conditional rendering to hide the notification */}
-      {/* Add the 'hidden' class to hide the message smoothly */}
       <div
         data-cy="ErrorNotification"
         className={classNames(
@@ -116,17 +132,6 @@ export const App: React.FC = () => {
           onClick={() => setError('')}
         />
         {error}
-        {/*
-        Unable to load todos
-        <br />
-        Title should not be empty
-        <br />
-        Unable to add a todo
-        <br />
-        Unable to delete a todo
-        <br />
-        Unable to update a todo
-        */}
       </div>
     </div>
   );
