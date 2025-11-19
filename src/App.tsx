@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { getTodos } from './api/todos';
 import { Footer } from './components/Footer';
 import {
@@ -10,13 +10,14 @@ import {
 import classNames from 'classnames';
 import { TodoList } from './components/TodoList';
 import { Todo } from './types/Todo';
+import { NewTodoForm } from './components/NewTodoForm';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState<TodoStatusOption>(TodoStatusOptions.ALL);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const newTodoField = useRef<HTMLInputElement>(null);
+  const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
   const setDisappearingError = (msg: string, timeout: number = 3000) => {
     setError(msg);
@@ -38,10 +39,6 @@ export const App: React.FC = () => {
     setFilter(getWindowHash());
 
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  useEffect(() => {
-    newTodoField.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -87,22 +84,20 @@ export const App: React.FC = () => {
             />
           )}
 
-          {/* Add a todo on form submit */}
-          <form>
-            <input
-              data-cy="NewTodoField"
-              type="text"
-              className="todoapp__new-todo"
-              placeholder="What needs to be done?"
-              ref={newTodoField}
-            />
-          </form>
+          <NewTodoForm
+            setTodos={setTodos}
+            setError={setError}
+            setDisappearingError={setDisappearingError}
+            setTempTodo={setTempTodo}
+            todos={todos}
+          />
         </header>
 
         <TodoList
           visibleTodos={visibleTodos}
           setTodos={setTodos}
-          setError={setDisappearingError}
+          setError={setError}
+          tempTodo={tempTodo}
         />
 
         {!!todos.length && (
