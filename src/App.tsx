@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useMemo, useState } from 'react';
 import { getTodos } from './api/todos';
 import { Footer } from './components/Footer';
@@ -15,7 +14,6 @@ import { NewTodoForm } from './components/NewTodoForm';
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [filter, setFilter] = useState<TodoStatusOption>(TodoStatusOptions.ALL);
-  const [loading, setLoading] = useState(false);
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
   const [error, setError] = useState('');
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
@@ -51,14 +49,12 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
     setError('');
     getTodos()
       .then((fetchedTodos: Todo[]) => setTodos(fetchedTodos))
       .catch(() => {
         setDisappearingError('Unable to load todos');
-      })
-      .finally(() => setLoading(false));
+      });
   }, []);
 
   const visibleTodos = useMemo(() => {
@@ -122,8 +118,6 @@ export const App: React.FC = () => {
         )}
       </div>
 
-      {/* DON'T use conditional rendering to hide the notification */}
-      {/* Add the 'hidden' class to hide the message smoothly */}
       <div
         data-cy="ErrorNotification"
         className={classNames(
@@ -138,17 +132,6 @@ export const App: React.FC = () => {
           onClick={() => setError('')}
         />
         {error}
-        {/*
-        Unable to load todos
-        <br />
-        Title should not be empty
-        <br />
-        Unable to add a todo
-        <br />
-        Unable to delete a todo
-        <br />
-        Unable to update a todo
-        */}
       </div>
     </div>
   );
