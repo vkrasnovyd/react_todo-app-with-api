@@ -9,6 +9,9 @@ interface Props {
   setTodos: StateSetter<Todo[]>;
   setError: (msg: string, timeout?: number) => void;
   tempTodo: Todo | null;
+  loadingIds: number[];
+  addLoadingId: (postId: number) => void;
+  removeLoadingId: (postId: number) => void;
 }
 
 export const TodoList: React.FC<Props> = ({
@@ -16,6 +19,9 @@ export const TodoList: React.FC<Props> = ({
   setTodos,
   setError,
   tempTodo,
+  loadingIds,
+  addLoadingId,
+  removeLoadingId,
 }) => {
   const renderTodo = (todo: Todo, isTemp: boolean) => {
     const nodeRef = createRef<HTMLDivElement>();
@@ -32,6 +38,9 @@ export const TodoList: React.FC<Props> = ({
           nodeRef={nodeRef}
           setTodos={setTodos}
           setError={setError}
+          loadingIds={loadingIds}
+          addLoadingId={addLoadingId}
+          removeLoadingId={removeLoadingId}
         />
       </CSSTransition>
     );

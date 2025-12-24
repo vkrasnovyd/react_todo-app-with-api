@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import classNames from 'classnames';
 import { TodoLoader } from '../TodoLoader';
-import { RefObject, useRef } from 'react';
+import { RefObject } from 'react';
 import { Todo } from '../../types/Todo';
 import { deleteTodo } from '../../api/todos';
 import { StateSetter } from '../../types/StateSetter';
@@ -11,6 +11,9 @@ interface Props {
   nodeRef: RefObject<HTMLDivElement>;
   setTodos: StateSetter<Todo[]>;
   setError: (msg: string, timeout?: number) => void;
+  loadingIds: number[];
+  addLoadingId: (postId: number) => void;
+  removeLoadingId: (postId: number) => void;
 }
 
 export const TodoItem: React.FC<Props> = ({
@@ -18,19 +21,24 @@ export const TodoItem: React.FC<Props> = ({
   nodeRef,
   setTodos,
   setError,
+  loadingIds,
+  addLoadingId,
+  removeLoadingId,
 }) => {
-  const loading = useRef(false);
+  const loading = loadingIds.includes(todo.id) || todo.id === 0;
   const editing = false;
 
-  const handleDelete = (todoId: number): void => {
-    loading.current = true;
-    deleteTodo(todoId)
-      .catch(() => setError('Unable to delete a todo'))
-      .finally(() => {
-        setTodos((currentTodos: Todo[]) => {
-          return currentTodos.filter(t => t.id !== todoId);
-        });
-      });
+  const handleDelete = async (todoId: number) => {
+    addLoadingId(todoId);
+    try {
+      await deleteTodo(todoId);
+      setTodos((currentTodos: Todo[]) =>
+        currentTodos.filter(t => t.id !== todoId),
+      );
+    } catch {
+      setError('Unable to delete a todo');
+      removeLoadingId(todoId);
+    }
   };
 
   return (
@@ -75,7 +83,7 @@ export const TodoItem: React.FC<Props> = ({
         </>
       )}
 
-      <TodoLoader isActive={loading.current} />
+      <TodoLoader isActive={loading} />
     </div>
   );
 };

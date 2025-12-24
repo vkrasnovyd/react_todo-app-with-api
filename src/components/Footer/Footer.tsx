@@ -12,12 +12,14 @@ interface Props {
   allTodos: Todo[];
   setTodos: StateSetter<Todo[]>;
   currentFilter: TodoStatusOption;
+  setError: (msg: string, timeout?: number) => void;
 }
 
 export const Footer: React.FC<Props> = ({
   allTodos,
   setTodos,
   currentFilter,
+  setError,
 }) => {
   const activeTodos: Todo[] = [];
   const completedTodos: Todo[] = [];
@@ -30,9 +32,24 @@ export const Footer: React.FC<Props> = ({
     }
   });
 
-  const handleCleanup = () => {
-    completedTodos.forEach(todo => deleteTodo(todo.id));
-    setTodos(activeTodos);
+  const handleCleanup = async () => {
+    const results = await Promise.allSettled(
+      completedTodos.map(todo => deleteTodo(todo.id).then(() => todo.id)),
+    );
+
+    const successfulDeletes = results
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
+
+    const hasError = completedTodos.length !== successfulDeletes.length;
+
+    if (hasError) {
+      setError('Unable to delete a todo');
+    }
+
+    setTodos(current =>
+      current.filter(todo => !successfulDeletes.includes(todo.id)),
+    );
   };
 
   return (
