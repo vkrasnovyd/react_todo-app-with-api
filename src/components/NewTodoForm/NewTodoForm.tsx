@@ -2,11 +2,11 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Todo } from '../../types/Todo';
 import { StateSetter } from '../../types/StateSetter';
 import { createTodo, USER_ID } from '../../api/todos';
+import { ErrorMessage } from '../../types/ErrorMessage';
 
 interface Props {
   setTodos: StateSetter<Todo[]>;
-  setError: (msg: string) => void;
-  setDisappearingError: (msg: string, timeout?: number) => void;
+  setError: (msg: string, timeout?: number) => void;
   setTempTodo: StateSetter<Todo | null>;
   todos: Todo[];
 }
@@ -14,7 +14,6 @@ interface Props {
 export const NewTodoForm: React.FC<Props> = ({
   setTodos,
   setError,
-  setDisappearingError,
   setTempTodo,
   todos,
 }) => {
@@ -24,14 +23,13 @@ export const NewTodoForm: React.FC<Props> = ({
 
   const handleFormSubmit = (event: FormEvent) => {
     event.preventDefault();
-    setError('');
+    setError(ErrorMessage.NONE);
     setSubmitting(true);
     const trimmedTitle = title.trim();
 
     if (!trimmedTitle) {
-      setDisappearingError('Title should not be empty');
+      setError(ErrorMessage.EMPTY_TITLE, 3000);
       setSubmitting(false);
-      setTimeout(() => setError(''), 3000);
 
       return;
     }
@@ -48,7 +46,7 @@ export const NewTodoForm: React.FC<Props> = ({
         setTodos(currentTodos => [...currentTodos, newTodo]);
         setTitle('');
       })
-      .catch(() => setDisappearingError('Unable to add a todo'))
+      .catch(() => setError(ErrorMessage.ADD, 3000))
       .finally(() => {
         setSubmitting(false);
         setTempTodo(null);

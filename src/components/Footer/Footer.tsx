@@ -7,6 +7,7 @@ import {
 import { Todo } from '../../types/Todo';
 import { deleteTodo } from '../../api/todos';
 import { StateSetter } from '../../types/StateSetter';
+import { ErrorMessage } from '../../types/ErrorMessage';
 
 interface Props {
   allTodos: Todo[];
@@ -44,7 +45,7 @@ export const Footer: React.FC<Props> = ({
     const hasError = completedTodos.length !== successfulDeletes.length;
 
     if (hasError) {
-      setError('Unable to delete a todo');
+      setError(ErrorMessage.DELETE);
     }
 
     setTodos(current =>

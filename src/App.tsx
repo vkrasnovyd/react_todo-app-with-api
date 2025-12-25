@@ -10,6 +10,7 @@ import classNames from 'classnames';
 import { TodoList } from './components/TodoList';
 import { Todo } from './types/Todo';
 import { NewTodoForm } from './components/NewTodoForm';
+import { ErrorMessage } from './types/ErrorMessage';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -26,9 +27,11 @@ export const App: React.FC = () => {
     setLoadingIds(prev => prev.filter(lid => lid !== postId));
   };
 
-  const setDisappearingError = (msg: string, timeout: number = 3000) => {
+  const setDisappearingError = (msg: string, timeout: number = 0) => {
     setError(msg);
-    setTimeout(() => setError(''), timeout);
+    if (!!timeout) {
+      setTimeout(() => setError(''), timeout);
+    }
   };
 
   const getWindowHash = (): TodoStatusOption => {
@@ -49,11 +52,11 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setError('');
+    setError(ErrorMessage.NONE);
     getTodos()
       .then((fetchedTodos: Todo[]) => setTodos(fetchedTodos))
       .catch(() => {
-        setDisappearingError('Unable to load todos');
+        setDisappearingError(ErrorMessage.INITIAL_LOADING, 3000);
       });
   }, []);
 
@@ -91,8 +94,7 @@ export const App: React.FC = () => {
 
           <NewTodoForm
             setTodos={setTodos}
-            setError={setError}
-            setDisappearingError={setDisappearingError}
+            setError={setDisappearingError}
             setTempTodo={setTempTodo}
             todos={todos}
           />
@@ -101,7 +103,7 @@ export const App: React.FC = () => {
         <TodoList
           visibleTodos={visibleTodos}
           setTodos={setTodos}
-          setError={setError}
+          setError={setDisappearingError}
           tempTodo={tempTodo}
           loadingIds={loadingIds}
           addLoadingId={addLoadingId}
@@ -113,7 +115,7 @@ export const App: React.FC = () => {
             allTodos={todos}
             setTodos={setTodos}
             currentFilter={filter}
-            setError={setError}
+            setError={setDisappearingError}
           />
         )}
       </div>
@@ -129,7 +131,7 @@ export const App: React.FC = () => {
           data-cy="HideErrorButton"
           type="button"
           className="delete"
-          onClick={() => setError('')}
+          onClick={() => setError(ErrorMessage.NONE)}
         />
         {error}
       </div>
