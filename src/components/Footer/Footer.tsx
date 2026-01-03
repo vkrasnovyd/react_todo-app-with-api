@@ -14,6 +14,8 @@ interface Props {
   setTodos: StateSetter<Todo[]>;
   currentFilter: TodoStatusOption;
   setError: (msg: string, timeout?: number) => void;
+  addLoadingId: (postId: number) => void;
+  removeLoadingId: (postId: number) => void;
 }
 
 export const Footer: React.FC<Props> = ({
@@ -21,6 +23,8 @@ export const Footer: React.FC<Props> = ({
   setTodos,
   currentFilter,
   setError,
+  addLoadingId,
+  removeLoadingId,
 }) => {
   const activeTodos: Todo[] = [];
   const completedTodos: Todo[] = [];
@@ -35,7 +39,14 @@ export const Footer: React.FC<Props> = ({
 
   const handleCleanup = async () => {
     const results = await Promise.allSettled(
-      completedTodos.map(todo => deleteTodo(todo.id).then(() => todo.id)),
+      completedTodos.map(todo => {
+        addLoadingId(todo.id);
+        const result = deleteTodo(todo.id).then(() => todo.id);
+
+        removeLoadingId(todo.id);
+
+        return result;
+      }),
     );
 
     const successfulDeletes = results

@@ -116,6 +116,8 @@ export const App: React.FC = () => {
             setTodos={setTodos}
             currentFilter={filter}
             setError={setDisappearingError}
+            addLoadingId={addLoadingId}
+            removeLoadingId={removeLoadingId}
           />
         )}
       </div>
