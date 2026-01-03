@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { TodoLoader } from '../TodoLoader';
 import { RefObject } from 'react';
 import { Todo } from '../../types/Todo';
-import { deleteTodo } from '../../api/todos';
+import { deleteTodo, updateTodo } from '../../api/todos';
 import { StateSetter } from '../../types/StateSetter';
 import { ErrorMessage } from '../../types/ErrorMessage';
 
@@ -29,6 +29,7 @@ export const TodoItem: React.FC<Props> = ({
   const loading = loadingIds.includes(todo.id) || todo.id === 0;
   const editing = false;
 
+  // -- Delete --
   const handleDelete = async (todoId: number) => {
     addLoadingId(todoId);
     try {
@@ -40,6 +41,27 @@ export const TodoItem: React.FC<Props> = ({
       setError(ErrorMessage.DELETE);
       removeLoadingId(todoId);
     }
+  };
+
+  // -- Update --
+  const handleUpdate = async (todoToUpdate: Todo) => {
+    addLoadingId(todoToUpdate.id);
+    setError(ErrorMessage.NONE);
+
+    updateTodo(todoToUpdate)
+      .then((updatedTodo: Todo) => {
+        setTodos((currentTodos: Todo[]) =>
+          currentTodos.map(originalTodo =>
+            originalTodo.id === todoToUpdate.id ? updatedTodo : originalTodo,
+          ),
+        );
+      })
+      .catch(() => setError(ErrorMessage.UPDATE, 3000))
+      .finally(() => removeLoadingId(todoToUpdate.id));
+  };
+
+  const toggle = () => {
+    handleUpdate({ ...todo, completed: !todo.completed });
   };
 
   return (
@@ -54,7 +76,7 @@ export const TodoItem: React.FC<Props> = ({
           type="checkbox"
           className="todo__status"
           checked={!!todo.completed}
-          readOnly
+          onChange={toggle}
         />
       </label>
 

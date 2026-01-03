@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getTodos } from './api/todos';
+import { getTodos, updateTodo } from './api/todos';
 import { Footer } from './components/Footer';
 import {
   isTodoStatusOption,
@@ -40,6 +40,57 @@ export const App: React.FC = () => {
     return isTodoStatusOption(hash)
       ? (hash as TodoStatusOption)
       : TodoStatusOptions.ALL;
+  };
+
+  const handleToggleAll = async () => {
+    if (!todos.length) {
+      return;
+    }
+
+    const notCompletedTodos: Todo[] = todos.filter(t => !t.completed);
+    let requestData: Todo[];
+
+    if (notCompletedTodos.length) {
+      requestData = notCompletedTodos.map((t: Todo) => {
+        return { ...t, completed: true };
+      });
+    } else {
+      requestData = todos.map((t: Todo) => {
+        return { ...t, completed: false };
+      });
+    }
+
+    const results = await Promise.allSettled(
+      requestData.map(async (todo): Promise<Todo> => {
+        addLoadingId(todo.id);
+        const updatedTodo: Todo = await updateTodo(todo);
+
+        removeLoadingId(todo.id);
+
+        return updatedTodo;
+      }),
+    );
+
+    const successfulUpdates = results.reduce<Record<number, Todo>>(
+      (todosMap, r) => {
+        if (r.status !== 'fulfilled') {
+          return todosMap;
+        }
+
+        const updatedTodo: Todo = r.value;
+
+        return { ...todosMap, [updatedTodo.id]: updatedTodo };
+      },
+      {},
+    );
+
+    if (requestData.length !== Object.keys(successfulUpdates).length) {
+      setError(ErrorMessage.UPDATE);
+    }
+
+    setTodos((currentTodos: Todo[]) =>
+      currentTodos.map(todo => successfulUpdates[todo.id] ?? todo),
+    );
   };
 
   useEffect(() => {
@@ -85,6 +136,7 @@ export const App: React.FC = () => {
           {renderTodosList && (
             <button
               type="button"
+              onClick={handleToggleAll}
               className={classNames('todoapp__toggle-all', {
                 active: toggleButtonActive,
               })}

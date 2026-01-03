@@ -11,8 +11,10 @@ export const createTodo = ({ userId, title, completed }: Omit<Todo, 'id'>) => {
   return client.post<Todo>('/todos', { userId, title, completed });
 };
 
+export const updateTodo = ({ id, ...todoData }: Todo): Promise<Todo> => {
+  return client.patch(`/todos/${id}`, todoData);
+};
+
 export const deleteTodo = (todoId: number) => {
   return client.delete(`/todos/${todoId}`);
 };
-
-// Add more methods here
