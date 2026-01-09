@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Todo } from '../../types/Todo';
+import { Todo, TodoUpdateData } from '../../types/Todo';
 import { deleteTodo, updateTodo } from '../../api/todos';
 import { StateSetter } from '../../types/StateSetter';
 import { ErrorMessage } from '../../types/ErrorMessage';
@@ -59,7 +59,7 @@ export const TodoItem: React.FC<Props> = ({
   };
 
   // -- Update --
-  const handleUpdate = async (todoToUpdate: Todo) => {
+  const handleUpdate = async (todoToUpdate: TodoUpdateData) => {
     addLoadingId(todoToUpdate.id);
     setError(ErrorMessage.NONE);
 
@@ -77,7 +77,7 @@ export const TodoItem: React.FC<Props> = ({
   };
 
   const toggle = () => {
-    handleUpdate({ ...todo, completed: !todo.completed });
+    handleUpdate({ id: todo.id, completed: !todo.completed });
   };
 
   const rename = (event: FormEvent) => {
@@ -88,7 +88,7 @@ export const TodoItem: React.FC<Props> = ({
     if (!cleanTitle) {
       handleDelete(todo.id);
     } else if (todo.title !== cleanTitle) {
-      handleUpdate({ ...todo, title: cleanTitle });
+      handleUpdate({ id: todo.id, title: cleanTitle });
     } else {
       setEditing(false);
     }
