@@ -1,7 +1,14 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import classNames from 'classnames';
 import { TodoLoader } from '../TodoLoader';
-import { RefObject } from 'react';
+import {
+  FormEvent,
+  KeyboardEvent,
+  RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Todo } from '../../types/Todo';
 import { deleteTodo, updateTodo } from '../../api/todos';
 import { StateSetter } from '../../types/StateSetter';
@@ -27,7 +34,15 @@ export const TodoItem: React.FC<Props> = ({
   removeLoadingId,
 }) => {
   const loading = loadingIds.includes(todo.id) || todo.id === 0;
-  const editing = false;
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(todo?.title || '');
+  const todoInputField = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!!editing) {
+      todoInputField.current?.focus();
+    }
+  }, [editing]);
 
   // -- Delete --
   const handleDelete = async (todoId: number) => {
@@ -55,6 +70,7 @@ export const TodoItem: React.FC<Props> = ({
             originalTodo.id === todoToUpdate.id ? updatedTodo : originalTodo,
           ),
         );
+        setEditing(false);
       })
       .catch(() => setError(ErrorMessage.UPDATE, 3000))
       .finally(() => removeLoadingId(todoToUpdate.id));
@@ -64,11 +80,33 @@ export const TodoItem: React.FC<Props> = ({
     handleUpdate({ ...todo, completed: !todo.completed });
   };
 
+  const rename = (event: FormEvent) => {
+    event.preventDefault();
+
+    const cleanTitle = title.trim();
+
+    if (!cleanTitle) {
+      handleDelete(todo.id);
+    } else if (todo.title !== cleanTitle) {
+      handleUpdate({ ...todo, title: cleanTitle });
+    } else {
+      setEditing(false);
+    }
+  };
+
+  const reset = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      setEditing(false);
+      setTitle(todo.title);
+    }
+  };
+
   return (
     <div
       data-cy="Todo"
       ref={nodeRef}
       className={classNames('todo', { completed: !!todo.completed })}
+      onDoubleClick={() => setEditing(true)}
     >
       <label className="todo__status-label">
         <input
@@ -81,13 +119,17 @@ export const TodoItem: React.FC<Props> = ({
       </label>
 
       {editing ? (
-        <form>
+        <form onSubmit={rename}>
           <input
             data-cy="TodoTitleField"
             type="text"
+            ref={todoInputField}
             className="todo__title-field"
             placeholder="Empty todo will be deleted"
-            value="Todo is being edited now"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            onBlur={rename}
+            onKeyUp={reset}
           />
         </form>
       ) : (
